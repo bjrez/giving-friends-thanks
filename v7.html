@@ -355,12 +355,12 @@
               <label for="rsvpStatus">Attending?</label>
               <select id="rsvpStatus" name="status" onchange="toggleDishInput(this.value)">
                 <option value="Attending">Yes! I'll be there 🎉</option>
-                <option value="Declined">No im gey 😢 😢</option>
+                <option value="Declined">No im gey 😢</option>
               </select>
             </div>
             <div id="dishGroup">
               <label for="dishName">Dish or Drink to Bring</label>
-              <input type="text" id="dishName" name="dish" placeholder="e.g. Pumpkin Pie or Mulled Cider">
+              <input type="text" id="dishName" name="dish" placeholder="e.g. Pumpkin Pie or Buzzball" required>
             </div>
             <button type="submit" class="potluck-submit">Submit Response</button>
           </form>
@@ -374,7 +374,7 @@
   </div>
 
   <script>
-    // Your Firebase Configuration
+    // Firebase Configuration
     const firebaseConfig = {
       apiKey: "AIzaSyBL8KkJrTmb20JMx6vKplwV2xhwaV6TvXU",
       authDomain: "friends-giving-thanks.firebaseapp.com",
@@ -420,6 +420,7 @@
       if (status === 'Declined') {
         dishGroup.style.display = 'none';
         dishInput.required = false;
+        dishInput.value = '';
       } else {
         dishGroup.style.display = 'block';
         dishInput.required = true;
@@ -466,11 +467,23 @@
       const statusElement = document.getElementById('potluckStatus');
       const submitBtn = event.target.querySelector('.potluck-submit');
 
+      // Check 1: Deny empty name
+      if (!name) {
+        statusElement.textContent = "Please enter your name before submitting.";
+        return;
+      }
+
+      // Check 2: Deny empty dish if attending
+      if (statusChoice === 'Attending' && !dish) {
+        statusElement.textContent = "Please let us know what dish or drink you're bringing!";
+        return;
+      }
+
       submitBtn.disabled = true;
       statusElement.textContent = "Saving response...";
 
       try {
-        // 1. Save entry to Firebase database (for real-time on-screen list)
+        // 1. Save entry to Firebase database
         await rsvpRef.push({
           name: name,
           status: statusChoice,
@@ -490,9 +503,7 @@
             status: statusChoice, 
             dish: statusChoice === 'Attending' ? dish : 'N/A' 
           })
-        }).catch(() => {
-          // Silent catch so email failures don't disrupt the user UI if Firebase succeeds
-        });
+        }).catch(() => {});
 
         statusElement.textContent = statusChoice === 'Attending' 
           ? `Thanks, ${name}! Your dish is added to the list.` 
