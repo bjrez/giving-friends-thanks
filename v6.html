@@ -1,0 +1,494 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#341f1c">
+  <title>Friendsgiving Invitation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet">
+  
+  <!-- Firebase SDKs (Compat version for single-file HTML) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <style>
+    :root {
+      --ink: #37231f;
+      --cream: #fff8eb;
+      --paper: #f7ecda;
+      --gold: #c99b53;
+      --cranberry: #782f3a;
+      --orange: #b96d3d;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "DM Sans", sans-serif;
+      color: var(--ink);
+      background:
+        linear-gradient(145deg, rgba(40, 24, 23, .74), rgba(31, 21, 20, .8) 65%, rgba(49, 28, 27, .76)),
+        #341f1c;
+    }
+    button { font-family: "DM Sans", sans-serif; }
+    button:focus-visible { outline: 3px solid #e5b66d; outline-offset: 6px; }
+    .stage {
+      position: relative;
+      isolation: isolate;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      padding: 40px 20px;
+    }
+    .intro, .invitation {
+      width: min(100%, 640px);
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+    .eyebrow {
+      margin: 0 0 22px;
+      color: #dfbd87;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .34em;
+      text-transform: uppercase;
+    }
+    .intro h1 {
+      color: #fff5e5;
+      font-family: "Playfair Display", serif;
+      font-weight: 500;
+      font-size: clamp(38px, 6vw, 68px);
+      line-height: 1.12;
+      margin: 0;
+    }
+    .intro h1 em { color: #e1ad72; font-weight: 400; }
+    .envelope-button {
+      display: block;
+      width: min(100%, 430px);
+      padding: 0;
+      margin: 40px auto 0;
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+    }
+    .envelope {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1.54;
+      filter: drop-shadow(0 24px 28px rgba(9, 5, 4, .35));
+      transition: transform .35s ease, filter .35s ease;
+      perspective: 900px;
+    }
+    .envelope-button:hover .envelope { transform: translateY(-7px); filter: drop-shadow(0 30px 30px rgba(9, 5, 4, .4)); }
+    .envelope-back {
+      position: absolute;
+      inset: 0;
+      background: #dfc8a5;
+      border-radius: 5px;
+      box-shadow: inset 0 0 0 2px rgba(103, 63, 38, .12);
+    }
+    .letter-peek {
+      position: absolute;
+      left: 10%;
+      right: 10%;
+      top: 9%;
+      height: 78%;
+      background: #fff9eb;
+      border: 1px solid #dbc8a6;
+      display: grid;
+      place-items: start center;
+      padding-top: 14%;
+      color: var(--cranberry);
+      font-family: "Playfair Display", serif;
+      font-style: italic;
+      font-size: clamp(16px, 4vw, 24px);
+      box-shadow: 0 2px 9px rgba(53, 31, 22, .12);
+      transition: transform .7s cubic-bezier(.2,.7,.2,1) .42s, box-shadow .7s ease .42s;
+    }
+    .flap {
+      position: absolute;
+      inset: 0;
+      background: #edd7b6;
+      clip-path: polygon(0 0, 100% 0, 50% 57%);
+      z-index: 3;
+      transform-origin: center top;
+      transition: transform .7s ease, z-index 0s .3s;
+      filter: drop-shadow(0 3px 2px rgba(79, 49, 32, .15));
+    }
+    .front {
+      position: absolute;
+      inset: 0;
+      z-index: 4;
+      background: linear-gradient(150deg, #e8d1af, #d6b98f);
+      clip-path: polygon(0 0, 50% 56%, 100% 0, 100% 100%, 0 100%);
+      border-radius: 4px;
+    }
+    .seal {
+      position: absolute;
+      z-index: 5;
+      top: 41%;
+      left: 50%;
+      width: 70px;
+      height: 70px;
+      transform: translate(-50%, -10%);
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: #f2d9a8;
+      background: radial-gradient(circle at 35% 28%, #a54b52, #78303b 72%);
+      border: 3px solid #8e3942;
+      box-shadow: 0 4px 8px rgba(64, 28, 26, .28);
+      font-family: "Playfair Display", serif;
+      font-style: italic;
+      font-size: 29px;
+      transition: opacity .2s ease;
+    }
+    .envelope-button.opening .flap { transform: rotateX(180deg); z-index: 1; }
+    .envelope-button.opening .letter-peek { transform: translateY(-43%); box-shadow: 0 15px 25px rgba(53, 31, 22, .22); }
+    .envelope-button.opening .seal { opacity: 0; }
+    .tap-label {
+      margin: 30px 0 0;
+      color: #e0bc8b;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .25em;
+      text-transform: uppercase;
+    }
+    .invitation[hidden], .intro[hidden] { display: none; }
+    .invitation { animation: reveal .75s ease both; }
+    @keyframes reveal {
+      from { opacity: 0; transform: translateY(22px) scale(.97); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .card {
+      position: relative;
+      background: var(--cream);
+      padding: clamp(32px, 7vw, 67px) clamp(25px, 7vw, 70px);
+      box-shadow: 0 28px 55px rgba(10, 5, 4, .32);
+      outline: 1px solid rgba(198, 146, 77, .4);
+      outline-offset: -13px;
+    }
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 21px;
+      border: 1px solid #d9bd91;
+      pointer-events: none;
+    }
+    .card-top { color: var(--orange); font-size: 11px; font-weight: 700; letter-spacing: .32em; text-transform: uppercase; margin: 0 0 20px; }
+    .card h2 {
+      font-family: "Playfair Display", serif;
+      color: var(--cranberry);
+      font-size: clamp(44px, 8vw, 68px);
+      line-height: 1.05;
+      font-weight: 500;
+      margin: 0 0 19px;
+    }
+    .card-copy { font-family: "Playfair Display", serif; font-size: clamp(16px, 3vw, 20px); line-height: 1.6; margin: 0 auto; max-width: 390px; }
+    .divider { display: flex; align-items: center; gap: 15px; margin: 33px auto; max-width: 325px; color: var(--gold); }
+    .divider::before, .divider::after { content: ""; height: 1px; flex: 1; background: #d9c5a2; }
+    .details { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .detail + .detail { border-left: 1px solid #dbc8a8; }
+    .detail-label { display: block; color: var(--orange); font-size: 10px; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; margin-bottom: 11px; }
+    .detail-value { display: block; font-family: "Playfair Display", serif; font-size: clamp(15px, 2.6vw, 19px); line-height: 1.3; color: var(--ink); }
+    
+    /* Potluck Form Styles */
+    .potluck {
+      margin-top: 28px;
+      padding: 30px clamp(20px, 5vw, 40px);
+      background: #fff8f1;
+      border: 1px solid #dfc6ac;
+      box-shadow: 0 10px 25px rgba(10,5,4,.08);
+      position: relative;
+    }
+    .potluck::before { content: ''; position: absolute; inset: 8px; border: 1px solid #e9d4c5; pointer-events: none; }
+    .potluck-kicker { margin: 0 0 7px; color: var(--orange); font-size: 10px; font-weight: 700; letter-spacing: .28em; text-transform: uppercase; }
+    .potluck h3 { margin: 0; color: var(--cranberry); font: italic 500 clamp(24px, 4vw, 32px) 'Playfair Display', serif; }
+    .potluck-copy { margin: 10px auto 20px; max-width: 360px; color: #785952; font: 14px/1.5 'Playfair Display', serif; }
+
+    /* RSVP Live List */
+    .rsvp-list-container {
+      text-align: left;
+      margin-bottom: 25px;
+      background: #fffdf8;
+      border: 1px solid #e2c9b6;
+      border-radius: 4px;
+      padding: 16px;
+    }
+    .rsvp-list-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      color: var(--cranberry);
+      margin: 0 0 12px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #eee0d5;
+    }
+    .rsvp-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      max-height: 180px;
+      overflow-y: auto;
+    }
+    .rsvp-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px dashed #edd8ca;
+      font-size: 14px;
+    }
+    .rsvp-item:last-child { border-bottom: none; }
+    .rsvp-guest { font-weight: 600; color: var(--ink); }
+    .rsvp-dish { color: var(--orange); font-family: "Playfair Display", serif; font-style: italic; }
+    .rsvp-status-badge {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-family: "DM Sans", sans-serif;
+      font-style: normal;
+      margin-left: 6px;
+    }
+    .badge-attending { background: #e2f0d9; color: #385723; }
+    .badge-declined { background: #fce4d6; color: #c65911; }
+
+    .potluck-form { text-align: left; display: grid; gap: 12px; }
+    .potluck-form label { display: block; margin-bottom: 4px; color: #7d3943; font-size: 10px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
+    .potluck-form input, .potluck-form select { width: 100%; padding: 10px 12px; border: 1px solid #d5b8aa; border-radius: 2px; background: #fffdf8; color: var(--ink); font: 14px 'DM Sans', sans-serif; }
+    .potluck-form input:focus-visible, .potluck-form select:focus-visible { outline: 2px solid var(--cranberry); }
+    .potluck-submit { justify-self: center; margin-top: 8px; border: 0; border-radius: 100px; padding: 11px 24px; background: var(--cranberry); color: #fff8ed; cursor: pointer; font-size: 12px; font-weight: 700; letter-spacing: .08em; }
+    .potluck-submit:hover { background: #5d232e; }
+    .potluck-submit:disabled { opacity: .6; cursor: wait; }
+    .potluck-status { min-height: 20px; margin: 12px 0 0; color: var(--cranberry); font-size: 13px; font-weight: 500; text-align: center; }
+
+    /* Back Button Styles */
+    .close-button {
+      margin-top: 26px;
+      border: 1px solid rgba(231, 194, 147, .7);
+      background: transparent;
+      color: #f7e7d0;
+      border-radius: 100px;
+      padding: 11px 22px;
+      cursor: pointer;
+      font-size: 12px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      transition: background .2s ease, border-color .2s ease;
+    }
+    .close-button:hover {
+      background: rgba(255, 255, 255, .15);
+      border-color: #dfbd87;
+    }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <!-- Intro Screen with Envelope -->
+    <div class="intro" id="intro">
+      <p class="eyebrow">You're Invited</p>
+      <h1>Friendsgiving <em>2026</em></h1>
+
+      <button class="envelope-button" id="envBtn" onclick="openEnvelope()">
+        <div class="envelope">
+          <div class="envelope-back"></div>
+          <div class="letter-peek">You're Invited!</div>
+          <div class="flap"></div>
+          <div class="front"></div>
+          <div class="seal">IZ</div>
+        </div>
+      </button>
+
+      <p class="tap-label">Click envelope to open</p>
+    </div>
+
+    <!-- Main Invitation Card -->
+    <div class="invitation" id="invitation" hidden>
+      <div class="card">
+        <p class="card-top">Annual Celebration</p>
+        <h2>Friendsgiving Dinner</h2>
+        <p class="card-copy">Join us for a cozy evening of good food, warm drinks, and great company.</p>
+        
+        <div class="divider">✦</div>
+
+        <div class="details">
+          <div class="detail">
+            <span class="detail-label">Date</span>
+            <span class="detail-value">Saturday<br>Nov 14</span>
+          </div>
+          <div class="detail">
+            <span class="detail-label">Time</span>
+            <span class="detail-value">6:00 PM<br>Onwards</span>
+          </div>
+          <div class="detail">
+            <span class="detail-label">Location</span>
+            <span class="detail-value">1058 Mehlert St<br>Kingsburg, CA 93631</span>
+          </div>
+        </div>
+
+        <div class="potluck">
+          <p class="potluck-kicker">Potluck & Guest List</p>
+          <h3>Who's Coming & What's Being Brought</h3>
+          <p class="potluck-copy">Check out what everyone else is bringing so we don't end up with duplicate dishes!</p>
+
+          <!-- Live List of Guests & Dishes -->
+          <div class="rsvp-list-container">
+            <div class="rsvp-list-title">Guest Responses</div>
+            <ul class="rsvp-list" id="rsvpList">
+              <li class="rsvp-item" style="color: #888; justify-content: center;">Loading responses...</li>
+            </ul>
+          </div>
+
+          <!-- RSVP Form -->
+          <form class="potluck-form" id="potluckForm" onsubmit="handleFormSubmit(event)">
+            <div>
+              <label for="guestName">Your Name</label>
+              <input type="text" id="guestName" name="name" placeholder="e.g. Alex & Sam" required>
+            </div>
+            <div>
+              <label for="rsvpStatus">Attending?</label>
+              <select id="rsvpStatus" name="status" onchange="toggleDishInput(this.value)">
+                <option value="Attending">Yes! I'll be there 🎉</option>
+                <option value="Declined">No im gey 😢</option>
+              </select>
+            </div>
+            <div id="dishGroup">
+              <label for="dishName">Dish or Drink to Bring</label>
+              <input type="text" id="dishName" name="dish" placeholder="e.g. Mac & Cheese or Buzzball">
+            </div>
+            <button type="submit" class="potluck-submit">Submit Response</button>
+          </form>
+          <div class="potluck-status" id="potluckStatus"></div>
+        </div>
+      </div>
+
+      <!-- Back Button -->
+      <button class="close-button" onclick="closeEnvelope()">← Back to Envelope</button>
+    </div>
+  </div>
+
+  <script>
+    // Your Firebase Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyBL8KkJrTmb20JMx6vKplwV2xhwaV6TvXU",
+      authDomain: "friends-giving-thanks.firebaseapp.com",
+      databaseURL: "https://friends-giving-thanks-default-rtdb.firebaseio.com",
+      projectId: "friends-giving-thanks",
+      storageBucket: "friends-giving-thanks.firebasestorage.app",
+      messagingSenderId: "493098081202",
+      appId: "1:493098081202:web:cc350ea71b2889d7f1e2ab",
+      measurementId: "G-SBHQ4Y6T0S"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    const rsvpRef = database.ref('rsvps');
+
+    function openEnvelope() {
+      const btn = document.getElementById('envBtn');
+      const intro = document.getElementById('intro');
+      const invitation = document.getElementById('invitation');
+
+      btn.classList.add('opening');
+
+      setTimeout(() => {
+        intro.hidden = true;
+        invitation.hidden = false;
+      }, 1200);
+    }
+
+    function closeEnvelope() {
+      const btn = document.getElementById('envBtn');
+      const intro = document.getElementById('intro');
+      const invitation = document.getElementById('invitation');
+
+      invitation.hidden = true;
+      intro.hidden = false;
+      btn.classList.remove('opening');
+    }
+
+    function toggleDishInput(status) {
+      const dishGroup = document.getElementById('dishGroup');
+      const dishInput = document.getElementById('dishName');
+      if (status === 'Declined') {
+        dishGroup.style.display = 'none';
+        dishInput.required = false;
+      } else {
+        dishGroup.style.display = 'block';
+        dishInput.required = true;
+      }
+    }
+
+    // Live Database Listener: Updates list for everyone automatically
+    rsvpRef.on('value', (snapshot) => {
+      const listElement = document.getElementById('rsvpList');
+      listElement.innerHTML = '';
+
+      const data = snapshot.val();
+      if (!data) {
+        listElement.innerHTML = '<li class="rsvp-item" style="color: #888; justify-content: center;">No RSVPs yet. Be the first!</li>';
+        return;
+      }
+
+      Object.values(data).forEach(entry => {
+        const li = document.createElement('li');
+        li.className = 'rsvp-item';
+
+        const isAttending = entry.status === 'Attending';
+        const badgeClass = isAttending ? 'badge-attending' : 'badge-declined';
+        const statusText = isAttending ? 'Attending' : 'Declined';
+        const dishText = isAttending && entry.dish ? ` — ${entry.dish}` : '';
+
+        li.innerHTML = `
+          <div>
+            <span class="rsvp-guest">${entry.name}</span>
+            <span class="rsvp-status-badge ${badgeClass}">${statusText}</span>
+          </div>
+          <span class="rsvp-dish">${dishText}</span>
+        `;
+        listElement.appendChild(li);
+      });
+    });
+
+    // Save RSVP to Database
+    async function handleFormSubmit(event) {
+      event.preventDefault();
+      const name = document.getElementById('guestName').value.trim();
+      const statusChoice = document.getElementById('rsvpStatus').value;
+      const dish = document.getElementById('dishName').value.trim();
+      const statusElement = document.getElementById('potluckStatus');
+      const submitBtn = event.target.querySelector('.potluck-submit');
+
+      submitBtn.disabled = true;
+      statusElement.textContent = "Saving response...";
+
+      try {
+        await rsvpRef.push({
+          name: name,
+          status: statusChoice,
+          dish: statusChoice === 'Attending' ? dish : '',
+          timestamp: Date.now()
+        });
+
+        statusElement.textContent = statusChoice === 'Attending' 
+          ? `Thanks, ${name}! Your dish is added to the list.` 
+          : `Thanks for letting us know, ${name}!`;
+          
+        document.getElementById('potluckForm').reset();
+        toggleDishInput('Attending');
+      } catch (error) {
+        statusElement.textContent = "Oops! Could not save response. Please try again.";
+      } finally {
+        submitBtn.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>
