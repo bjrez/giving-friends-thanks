@@ -36,6 +36,32 @@
       overflow-x: hidden;
     }
 
+    /* Floating Music Controls */
+    .audio-control {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 99;
+      background: rgba(52, 31, 28, 0.75);
+      border: 1px solid var(--gold);
+      color: #f7e7d0;
+      border-radius: 50px;
+      padding: 8px 16px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      transition: all 0.3s ease;
+    }
+    .audio-control:hover {
+      background: rgba(120, 47, 58, 0.85);
+      transform: scale(1.05);
+    }
+
     /* Ambient Floating Leaves Background */
     .bg-leaves {
       position: fixed;
@@ -241,14 +267,16 @@
     .potluck h3 { margin: 0; color: var(--cranberry); font: italic 500 clamp(24px, 4vw, 32px) 'Playfair Display', serif; }
     .potluck-copy { margin: 10px auto 20px; max-width: 360px; color: #785952; font: 14px/1.5 'Playfair Display', serif; }
 
-    /* RSVP Live List */
+    /* RSVP Live List Container */
     .rsvp-list-container {
       text-align: left;
       margin-bottom: 25px;
       background: #fffdf8;
       border: 1px solid #e2c9b6;
-      border-radius: 4px;
+      border-radius: 6px;
       padding: 16px;
+      position: relative;
+      box-shadow: inset 0 2px 6px rgba(120, 47, 58, 0.04);
     }
     .rsvp-list-title {
       font-size: 11px;
@@ -257,27 +285,75 @@
       text-transform: uppercase;
       color: var(--cranberry);
       margin: 0 0 12px;
-      padding-bottom: 6px;
+      padding-bottom: 8px;
       border-bottom: 1px solid #eee0d5;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .rsvp-count-pill {
+      background: rgba(185, 109, 61, 0.12);
+      color: var(--orange);
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 10px;
+      font-weight: 700;
+    }
+    .rsvp-scroll-wrapper {
+      position: relative;
+      max-height: 210px;
+      overflow: hidden;
+    }
+    .rsvp-scroll-wrapper::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 20px;
+      background: linear-gradient(to bottom, transparent, rgba(255, 253, 248, 0.95));
+      pointer-events: none;
     }
     .rsvp-list {
       list-style: none;
       padding: 0;
       margin: 0;
-      max-height: 180px;
+      max-height: 200px;
       overflow-y: auto;
+      padding-right: 6px;
+    }
+    /* Custom Autumn Scrollbar */
+    .rsvp-list::-webkit-scrollbar {
+      width: 6px;
+    }
+    .rsvp-list::-webkit-scrollbar-track {
+      background: #f7ecda;
+      border-radius: 10px;
+    }
+    .rsvp-list::-webkit-scrollbar-thumb {
+      background: #c99b53;
+      border-radius: 10px;
+    }
+    .rsvp-list::-webkit-scrollbar-thumb:hover {
+      background: var(--orange);
     }
     .rsvp-item {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 8px 0;
-      border-bottom: 1px dashed #edd8ca;
+      padding: 10px 10px;
+      border-radius: 4px;
       font-size: 14px;
+      transition: background 0.2s ease;
     }
-    .rsvp-item:last-child { border-bottom: none; }
+    .rsvp-item:nth-child(even) {
+      background: rgba(247, 236, 218, 0.4);
+    }
+    .rsvp-item:hover {
+      background: rgba(185, 109, 61, 0.08);
+    }
     .rsvp-guest { font-weight: 600; color: var(--ink); }
-    .rsvp-dish { color: var(--orange); font-family: "Playfair Display", serif; font-style: italic; }
+    .rsvp-dish { color: var(--orange); font-family: "Playfair Display", serif; font-style: italic; text-align: right; }
     .rsvp-status-badge {
       font-size: 10px;
       padding: 2px 6px;
@@ -293,6 +369,7 @@
     .potluck-form label { display: block; margin-bottom: 4px; color: #7d3943; font-size: 10px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
     .potluck-form input, .potluck-form select { width: 100%; padding: 10px 12px; border: 1px solid #d5b8aa; border-radius: 2px; background: #fffdf8; color: var(--ink); font: 14px 'DM Sans', sans-serif; }
     .potluck-form input:focus-visible, .potluck-form select:focus-visible { outline: 2px solid var(--cranberry); }
+    .duplicate-warning { color: var(--orange); font-size: 12px; margin-top: 6px; font-weight: 600; display: block; }
     .potluck-submit { justify-self: center; margin-top: 8px; border: 0; border-radius: 100px; padding: 11px 24px; background: var(--cranberry); color: #fff8ed; cursor: pointer; font-size: 12px; font-weight: 700; letter-spacing: .08em; }
     .potluck-submit:hover { background: #5d232e; }
     .potluck-submit:disabled { opacity: .6; cursor: wait; }
@@ -327,7 +404,7 @@
       font-weight: 700;
       text-transform: none;
       background: linear-gradient(45deg, #b96d3d, #782f3a);
-     -webkit-background-clip: text;
+      -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       font-size: 14px;
     }
@@ -353,6 +430,16 @@
   </style>
 </head>
 <body>
+  <!-- Floating Music Toggle Button -->
+  <button class="audio-control" id="audioToggle" onclick="toggleAudio()">
+    <span id="audioIcon">🎵</span> <span id="audioText">Play Music</span>
+  </button>
+
+  <!-- Ambient Audio Track -->
+  <audio id="bgMusic" loop preload="auto">
+    <source src="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=cozy-acoustic-112181.mp3" type="audio/mpeg">
+  </audio>
+
   <!-- Ambient Leaves Background -->
   <div class="bg-leaves" id="leafContainer"></div>
 
@@ -387,11 +474,11 @@
         <div class="details">
           <div class="detail">
             <span class="detail-label">Date</span>
-            <span class="detail-value">Saturday<br>Nov 14</span>
+            <span class="detail-value">Saturday<br>Nov 21</span>
           </div>
           <div class="detail">
             <span class="detail-label">Time</span>
-            <span class="detail-value">6:00 PM<br>Onwards</span>
+            <span class="detail-value">5:00 PM<br>Onwards</span>
           </div>
           <div class="detail">
             <span class="detail-label">Location</span>
@@ -406,10 +493,15 @@
 
           <!-- Live List of Guests & Dishes -->
           <div class="rsvp-list-container">
-            <div class="rsvp-list-title">Guest Responses</div>
-            <ul class="rsvp-list" id="rsvpList">
-              <li class="rsvp-item" style="color: #888; justify-content: center;">Loading responses...</li>
-            </ul>
+            <div class="rsvp-list-title">
+              <span>Guest Responses</span>
+              <span class="rsvp-count-pill" id="rsvpCount">0 RSVPs</span>
+            </div>
+            <div class="rsvp-scroll-wrapper">
+              <ul class="rsvp-list" id="rsvpList">
+                <li class="rsvp-item" style="color: #888; justify-content: center;">Loading responses...</li>
+              </ul>
+            </div>
           </div>
 
           <!-- RSVP Form -->
@@ -422,12 +514,13 @@
               <label for="rsvpStatus">Attending?</label>
               <select id="rsvpStatus" name="status" onchange="toggleDishInput(this.value)">
                 <option value="Attending">Yes! I'll be there 🎉</option>
-                <option value="Declined">No im gey 😢</option>
+                <option value="Declined">Can't make it 😢</option>
               </select>
             </div>
             <div id="dishGroup">
               <label for="dishName">Dish or Drink to Bring</label>
-              <input type="text" id="dishName" name="dish" placeholder="e.g. Pumpkin Pie or Buzzball" required>
+              <input type="text" id="dishName" name="dish" placeholder="e.g. Pumpkin Pie or Mulled Cider" required oninput="checkDuplicateDish(this.value)">
+              <div class="duplicate-warning" id="duplicateWarning"></div>
             </div>
             <button type="submit" class="potluck-submit">Submit Response</button>
           </form>
@@ -436,7 +529,7 @@
 
         <!-- Signature Watermark -->
         <div class="card-watermark">
-          Made by <span>Jacob 🎃</span>
+          Made by <span>Jacob 🎃 </span>
         </div>
       </div>
 
@@ -446,20 +539,41 @@
   </div>
 
   <script>
-    // 1. Floating Leaf Animation
+    // Audio Player Control
+    const bgMusic = document.getElementById('bgMusic');
+    const audioIcon = document.getElementById('audioIcon');
+    const audioText = document.getElementById('audioText');
+    let isPlaying = false;
+
+    function toggleAudio() {
+      if (isPlaying) {
+        bgMusic.pause();
+        audioIcon.textContent = '🎵';
+        audioText.textContent = 'Play Music';
+        isPlaying = false;
+      } else {
+        bgMusic.play().then(() => {
+          audioIcon.textContent = '🔊';
+          audioText.textContent = 'Pause Music';
+          isPlaying = true;
+        }).catch(e => console.log("Audio play blocked", e));
+      }
+    }
+
+    // Floating Leaf Animation
     const leafContainer = document.getElementById('leafContainer');
-    const leafEmojis = ['🍂', '🍁', '🦃'];
+    const leafEmojis = ['🍂', '🍁', '🌾'];
     for (let i = 0; i < 15; i++) {
       const leaf = document.createElement('div');
       leaf.className = 'leaf';
       leaf.textContent = leafEmojis[Math.floor(Math.random() * leafEmojis.length)];
-      leaf.style.left = `${Math.random() * 200}%`;
+      leaf.style.left = `${Math.random() * 100}%`;
       leaf.style.animationDuration = `${8 + Math.random() * 12}s`;
-      leaf.style.animationDelay = `${Math.random() * 2}s`;
+      leaf.style.animationDelay = `${Math.random() * 5}s`;
       leafContainer.appendChild(leaf);
     }
 
-    // 2. Interactive 3D Tilt Effect
+    // 3D Tilt Effect
     const card = document.getElementById('tiltCard');
     document.addEventListener('mousemove', (e) => {
       const invitationScreen = document.getElementById('invitation');
@@ -472,7 +586,7 @@
       if (card) card.style.transform = `rotateY(0deg) rotateX(0deg)`;
     });
 
-    // 3. Safe Firebase Initialization
+    // Firebase Initialization
     const firebaseConfig = {
       apiKey: "AIzaSyBL8KkJrTmb20JMx6vKplwV2xhwaV6TvXU",
       authDomain: "friends-giving-thanks.firebaseapp.com",
@@ -497,6 +611,10 @@
 
       btn.classList.add('opening');
 
+      if (!isPlaying) {
+        toggleAudio();
+      }
+
       setTimeout(() => {
         intro.hidden = true;
         invitation.hidden = false;
@@ -516,29 +634,61 @@
     function toggleDishInput(status) {
       const dishGroup = document.getElementById('dishGroup');
       const dishInput = document.getElementById('dishName');
+      const warningEl = document.getElementById('duplicateWarning');
       if (status === 'Declined') {
         dishGroup.style.display = 'none';
         dishInput.required = false;
         dishInput.value = '';
+        warningEl.textContent = '';
       } else {
         dishGroup.style.display = 'block';
         dishInput.required = true;
       }
     }
 
-    // 4. Live Database Updates
+    // Live Duplicate Dish Detector
+    function checkDuplicateDish(userDish) {
+      const warningEl = document.getElementById('duplicateWarning');
+      const query = userDish.trim().toLowerCase();
+      
+      if (query.length < 3) {
+        warningEl.textContent = '';
+        return;
+      }
+
+      const existingEntries = Array.from(document.querySelectorAll('.rsvp-item')).map(li => {
+        const guest = li.querySelector('.rsvp-guest')?.textContent || 'Someone';
+        const dish = li.querySelector('.rsvp-dish')?.textContent.replace(/^ — /, '').trim() || '';
+        return { guest, dish };
+      }).filter(item => item.dish !== '');
+
+      const match = existingEntries.find(item => item.dish.toLowerCase().includes(query));
+
+      if (match) {
+        warningEl.textContent = `⚠️ Heads up! ${match.guest} is already bringing "${match.dish}".`;
+      } else {
+        warningEl.textContent = '';
+      }
+    }
+
+    // Live Database Updates & Count Pill
     rsvpRef.on('value', (snapshot) => {
       const listElement = document.getElementById('rsvpList');
+      const countElement = document.getElementById('rsvpCount');
       if (!listElement) return;
       listElement.innerHTML = '';
 
       const data = snapshot.val();
       if (!data) {
+        if (countElement) countElement.textContent = '0 RSVPs';
         listElement.innerHTML = '<li class="rsvp-item" style="color: #888; justify-content: center;">No RSVPs yet. Be the first!</li>';
         return;
       }
 
-      Object.values(data).forEach(entry => {
+      const entries = Object.values(data);
+      if (countElement) countElement.textContent = `${entries.length} Guest${entries.length === 1 ? '' : 's'}`;
+
+      entries.forEach(entry => {
         const li = document.createElement('li');
         li.className = 'rsvp-item';
 
@@ -560,7 +710,7 @@
       console.error("Firebase Read Error:", error);
     });
 
-    // 5. Submit Handler with Input Validation
+    // Form Submit Handler
     async function handleFormSubmit(event) {
       event.preventDefault();
       const name = document.getElementById('guestName').value.trim();
@@ -569,13 +719,11 @@
       const statusElement = document.getElementById('potluckStatus');
       const submitBtn = event.target.querySelector('.potluck-submit');
 
-      // Validation 1: Deny empty name
       if (!name) {
         statusElement.textContent = "Please enter your name before submitting.";
         return;
       }
 
-      // Validation 2: Deny empty dish if attending
       if (statusChoice === 'Attending' && !dish) {
         statusElement.textContent = "Please let us know what dish or drink you're bringing!";
         return;
@@ -585,7 +733,6 @@
       statusElement.textContent = "Saving response...";
 
       try {
-        // Save to Firebase
         await rsvpRef.push({
           name: name,
           status: statusChoice,
@@ -593,7 +740,6 @@
           timestamp: Date.now()
         });
 
-        // Trigger Formspree email notification
         fetch("https://formspree.io/f/xaeeabev", {
           method: "POST",
           headers: {
@@ -612,6 +758,7 @@
           : `Thanks for letting us know, ${name}!`;
           
         document.getElementById('potluckForm').reset();
+        document.getElementById('duplicateWarning').textContent = '';
         toggleDishInput('Attending');
       } catch (error) {
         console.error("Firebase Write Error:", error);
